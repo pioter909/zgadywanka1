@@ -6,72 +6,113 @@ using System.Threading.Tasks;
 
 namespace GraMonolitycznie
 {
+  
+  /// <summary>
+  /// Gra Za dużo za mało. Komputer losuje liczbę z podanego zakresu.
+  /// Człowiek odgaduje wylosowaną liczbę podając swoje propozycje.
+  /// Komputer odpowiada: ZA DUŻO. ZA MAŁO, TRAFIONO
+  /// KM
+  /// </summary>
     class Program
     {
-        static void Main(string[] args)
+
+        static int Losuj(int min = 1, int max = 100)
         {
+            if (min > max)
+            {
+                min = 1;
+                max = 100;
+            }
+            Console.WriteLine($"Losuję liczbę od {min} do {max} \n odgadnij ją");
+            return (new Random()).Next(min, max + 1);
+        }
 
-            Console.WriteLine("Witaj!");
-            Console.Write("Podaj swoje imię: ");
-            string x = Console.ReadLine();
-            Console.WriteLine($"Witaj, {x}");
+        static int WczytajLiczbe(string prompt)
+        {
+            bool poprawnie = false;
+            int liczba = 0;
 
-            //1 Komputer losuje liczbę 
-            Random generator = new Random();
-            int wylosowana = generator.Next(1, 101);
-            Console.WriteLine("wylosowałem liczbę od 1 do 100. \n Odgadnij ją");
+            while (!poprawnie)
+            {
+                string napis = "";
+                Console.Write(prompt);
+                try
+                {
+                    napis = Console.ReadLine();
+                    if (napis.ToUpper() == "X")
+                    {
+                        Console.WriteLine("Aplikacja przerwana na życzenie uzytkownika!");
+                        Environment.Exit(1);
+                    }
 
-#if(DEBUG)
+                    liczba = Convert.ToInt32(napis);
+                    poprawnie = true;
+                }
+                catch (OverflowException)
+                {
+                    Console.WriteLine("podałeś zbyt dużą liczbę - spróbuj jeszcze raz");
+                    continue;
+                    //throw new OverflowException(); //podaj dalej
+                }
+                catch (FormatException)
+                {
+                    Console.WriteLine("nie podałeś poprawnej liczby - spróbuj jeszcze raz");
+                    continue;
+                }
+            }
 
-            Console.WriteLine(wylosowana); //usunąc w wersji release
+            return liczba;
+        }
 
+        static void Main()
+        {
+            // 1. Komputer losuje liczbę
+            Console.WriteLine("Podaj zakres losowania liczby do odgadnięcia");
 
-#endif
-            //wykonuj
+            int min = WczytajLiczbe("Podaj wartość od: ");
+            int max = WczytajLiczbe("Podaj wartość do: ");
+
+            int wylosowana = Losuj(min, max);
+#if DEBUG
+            Console.WriteLine("Tajne " + wylosowana);
+#endif            
+
+            Stopwatch stoper = Stopwatch.StartNew();
+            int licznik = 0;
             bool trafiono = false;
-            do
-            { 
-            //2 człowiek daje propozycje
-            #region
-            Console.Write("Podaj swoją propozycje: ");
-            string tekst = Console.ReadLine();
-if( tekst.ToLower(== X))
-
-            int propozycja = 0;
-            try
+            //Dopóki nie trafiono
+            while (!trafiono)
             {
-                propozycja = Convert.ToInt32(tekst);
-            }
-            catch (FormatException)
-            {
-                Console.WriteLine("Nie podano liczby");
-                    continue;
-            }
-            catch (OverflowException)
-            {
-                Console.WriteLine("Liczba nie mieści się w rejestrze!");
-                    continue;
-            }
+                // 2. Człowiek podaje propozycję
+                int propozycja = WczytajLiczbe("Podaj swoją propozycję: ");
 
-            Console.WriteLine($"Przyjąłem wartość {propozycja}");
-            #endregion
+                // 3. Komputer ocenia propozycję
+                if (propozycja < wylosowana)
+                {
+                    Console.WriteLine("ZA MAŁO");
+                }
+                else if (propozycja > wylosowana)
+                {
+                    Console.WriteLine("ZA DUŻO");
+                }
+                else
+                {
+                    Console.WriteLine("TRAFIONO");
+                    trafiono = true;
+                }
 
-            //3 komputer ocenia propozycje
-            #region
+                licznik++;
+            }//koniec dopóki
+            stoper.Stop();
 
-            if (propozycja < wylosowana)
-                Console.WriteLine("za mało");
-            else if (propozycja > wylosowana)
-                Console.WriteLine("za dużo");
-            else
-                Console.WriteLine("trafiono");
-                trafiono = true;
-                #endregion
 
-            }
-            while( !trafiono );
-//do momentu trafienia
-            Console.WriteLine("koniec gry");
+            // 4. Zakończenie gry
+            Console.WriteLine("Koniec gry");
+            Console.WriteLine($"wykonano {licznik} ruchów");
+            Console.WriteLine($"Czas gry = {stoper.Elapsed}");
         }
     }
 }
+        
+    
+
